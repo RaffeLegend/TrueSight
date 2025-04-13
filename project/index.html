@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI图像检测工具</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#6366F1',
+            success: '#16A34A',
+            danger: '#DC2626',
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.5s ease-out'
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: 0, transform: 'scale(0.95)' },
+              '100%': { opacity: 1, transform: 'scale(1)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-gradient-to-tr from-indigo-200 via-purple-100 to-pink-200 min-h-screen flex items-center justify-center p-6">
+
+  <div class="bg-white/90 backdrop-blur-xl shadow-2xl rounded-2xl p-8 w-full max-w-xl animate-fade-in">
+    <h1 class="text-4xl font-extrabold text-center text-gray-800 mb-6">
+      🧠 AI 图像检测
+    </h1>
+
+    <div id="dropZone" class="border-2 border-dashed border-primary rounded-xl p-6 text-center text-gray-500 hover:bg-primary/10 transition cursor-pointer mb-6">
+      <p class="text-lg">点击或拖拽图像到此处</p>
+      <input id="imageInput" type="file" accept="image/*" class="hidden" />
+    </div>
+
+    <img id="preview" class="rounded-xl mb-4 hidden w-full h-auto shadow-lg" />
+
+    <button onclick="detectImage()" class="w-full bg-primary hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition">
+      🔍 开始检测
+    </button>
+
+    <div id="result" class="mt-6 text-center text-xl font-semibold min-h-[2rem]"></div>
+  </div>
+
+  <script>
+    const imageInput = document.getElementById('imageInput');
+    const dropZone = document.getElementById('dropZone');
+    const preview = document.getElementById('preview');
+    const resultDiv = document.getElementById('result');
+
+    // 点击拖拽区打开文件选择
+    dropZone.addEventListener('click', () => imageInput.click());
+
+    // 拖拽上传支持
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('bg-primary/20');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('bg-primary/20');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('bg-primary/20');
+      imageInput.files = e.dataTransfer.files;
+      handleImagePreview();
+    });
+
+    imageInput.addEventListener('change', handleImagePreview);
+
+    function handleImagePreview() {
+      const file = imageInput.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          preview.src = e.target.result;
+          preview.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    async function detectImage() {
+      const file = imageInput.files[0];
+      if (!file) {
+        resultDiv.innerHTML = '<span class="text-red-600">❗请先上传一张图像</span>';
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      resultDiv.innerHTML = '<span class="text-gray-600 animate-pulse">⏳ 正在检测中...</span>';
+
+      try {
+        const response = await fetch('http://127.0.0.1:5000/api/detect', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) throw new Error(`HTTP 错误：${response.status}`);
+
+        const data = await response.json();
+        if (data.result === 'ai') {
+          resultDiv.innerHTML = '<span class="text-danger">🤖 检测结果：这是 AI 生成图像</span>';
+        } else {
+          resultDiv.innerHTML = '<span class="text-success">📷 检测结果：这是真实图像</span>';
+        }
+      } catch (error) {
+        console.error(error);
+        resultDiv.innerHTML = '<span class="text-red-600">❌ 检测失败，请稍后重试</span>';
+      }
+    }
+  </script>
+</body>
+</html>
