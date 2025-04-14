@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from detector import is_ai_generated
 from werkzeug.utils import secure_filename
@@ -15,7 +15,8 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)  # 自动创建 uploads 文件夹
 
 @app.route('/')
 def home():
-    return jsonify({"message": "AI 图像检测后端正在运行。"})
+    return render_template('index.html')
+    # return jsonify({"message": "AI 图像检测后端正在运行。"})
 
 @app.route('/api/detect', methods=['POST'])
 def detect_image():
