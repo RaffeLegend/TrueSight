@@ -25,11 +25,11 @@ def ping():
 @app.route('/api/detect', methods=['POST'])
 def detect_image():
     if 'image' not in request.files:
-        return jsonify({'error': '没有上传图像'}), 400
+        return jsonify({'error': 'No image uploaded'}), 400
 
     file = request.files['image']
     if file.filename == '':
-        return jsonify({'error': '未选择图像文件'}), 400
+        return jsonify({'error': 'No image file selected.'}), 400
 
     filename = secure_filename(file.filename)
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -40,8 +40,8 @@ def detect_image():
         result = is_ai_generated(filepath)  # 应返回 'ai' 或 'real'
         return jsonify({'result': result})
     except Exception as e:
-        print("检测出错：", e)
-        return jsonify({'error': '服务器检测失败'}), 500
+        print("Detection Error:", e)
+        return jsonify({'error': 'Server detection failed.'}), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
