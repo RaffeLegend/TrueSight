@@ -103,7 +103,7 @@
       resultDiv.innerHTML = '<span class="text-gray-600 animate-pulse">⏳ 正在检测中...</span>';
 
       try {
-        const response = await fetch('http://127.0.0.1:5000/api/detect', {
+        const response = await fetch('/api/detect', {
           method: 'POST',
           body: formData
         });
