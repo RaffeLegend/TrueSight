@@ -18,6 +18,10 @@ def home():
     return render_template('index.html')
     # return jsonify({"message": "AI 图像检测后端正在运行。"})
 
+@app.route('/ping')
+def ping():
+    return "pong"
+
 @app.route('/api/detect', methods=['POST'])
 def detect_image():
     if 'image' not in request.files:
@@ -42,4 +46,5 @@ def detect_image():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     # app.run(debug=True)
+    print(f"Flask server starting on port {port}...")
     app.run(host='0.0.0.0', port=port)

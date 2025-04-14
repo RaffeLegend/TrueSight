@@ -33,18 +33,18 @@
 
   <div class="bg-white/90 backdrop-blur-xl shadow-2xl rounded-2xl p-8 w-full max-w-xl animate-fade-in">
     <h1 class="text-4xl font-extrabold text-center text-gray-800 mb-6">
-      🧠 AI 图像检测
+      🧠 AI Generated Detection
     </h1>
 
     <div id="dropZone" class="border-2 border-dashed border-primary rounded-xl p-6 text-center text-gray-500 hover:bg-primary/10 transition cursor-pointer mb-6">
-      <p class="text-lg">点击或拖拽图像到此处</p>
+      <p class="text-lg">Click or drag an image here</p>
       <input id="imageInput" type="file" accept="image/*" class="hidden" />
     </div>
 
     <img id="preview" class="rounded-xl mb-4 hidden w-full h-auto shadow-lg" />
 
     <button onclick="detectImage()" class="w-full bg-primary hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition">
-      🔍 开始检测
+      🔍 Detect
     </button>
 
     <div id="result" class="mt-6 text-center text-xl font-semibold min-h-[2rem]"></div>
@@ -93,14 +93,14 @@
     async function detectImage() {
       const file = imageInput.files[0];
       if (!file) {
-        resultDiv.innerHTML = '<span class="text-red-600">❗请先上传一张图像</span>';
+        resultDiv.innerHTML = '<span class="text-red-600">❗Please upload an image first.</span>';
         return;
       }
 
       const formData = new FormData();
       formData.append('image', file);
 
-      resultDiv.innerHTML = '<span class="text-gray-600 animate-pulse">⏳ 正在检测中...</span>';
+      resultDiv.innerHTML = '<span class="text-gray-600 animate-pulse">⏳ Detection in progress...</span>';
 
       try {
         const response = await fetch('/api/detect', {
@@ -108,17 +108,17 @@
           body: formData
         });
 
-        if (!response.ok) throw new Error(`HTTP 错误：${response.status}`);
+        if (!response.ok) throw new Error(`HTTP Error：${response.status}`);
 
         const data = await response.json();
         if (data.result === 'ai') {
-          resultDiv.innerHTML = '<span class="text-danger">🤖 检测结果：这是 AI 生成图像</span>';
+          resultDiv.innerHTML = '<span class="text-danger">🤖 Detection Result: This is an AI-generated image.</span>';
         } else {
-          resultDiv.innerHTML = '<span class="text-success">📷 检测结果：这是真实图像</span>';
+          resultDiv.innerHTML = '<span class="text-success">📷 Detection Result: This image is authentic.</span>';
         }
       } catch (error) {
         console.error(error);
-        resultDiv.innerHTML = '<span class="text-red-600">❌ 检测失败，请稍后重试</span>';
+        resultDiv.innerHTML = '<span class="text-red-600">❌ Detection failed. Please try again later.</span>';
       }
     }
   </script>
