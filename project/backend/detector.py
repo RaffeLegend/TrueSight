@@ -29,9 +29,9 @@ def is_ai_generated(image_path):
 
         answer, reason = extract_answer_reason(response)
 
-        if 'ai' in answer:
+        if 'AI' in answer:
             return {'result': 'ai', 'reason': reason}
-        elif 'real' in answer or '真实' in answer:
+        elif 'Real' in answer:
             return {'result': 'real', 'reason': reason}
         else:
             return {'result': 'unknown', 'reason': reason}
