@@ -40,7 +40,7 @@ def detect_image():
     try:
         print('image_path: ', filepath)
         result = is_ai_generated(filepath)  # 应返回 'ai' 或 'real'
-        return jsonify({'result': result})
+        return jsonify(result)
     except Exception as e:
         print("Detection Error:", e)
         traceback.print_exc()
