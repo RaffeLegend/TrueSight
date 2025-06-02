@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from detector import is_ai_generated
 from werkzeug.utils import secure_filename
+import traceback
 import os
 
 # 初始化 Flask 应用
@@ -37,14 +38,16 @@ def detect_image():
 
     # 调用你的图像检测逻辑
     try:
+        print('image_path: ', filepath)
         result = is_ai_generated(filepath)  # 应返回 'ai' 或 'real'
         return jsonify({'result': result})
     except Exception as e:
         print("Detection Error:", e)
+        traceback.print_exc()
         return jsonify({'error': 'Server detection failed.'}), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     # app.run(debug=True)
     print(f"Flask server starting on port {port}...")
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=port, debug=True)

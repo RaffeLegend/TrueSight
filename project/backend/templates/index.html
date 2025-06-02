@@ -101,6 +101,9 @@
       resultDiv.innerHTML = '<span class="text-gray-600 animate-pulse">⏳ Detection in progress...</span>';
 
       try {
+        const formData = new FormData();
+        formData.append('image', file);
+	
         const response = await fetch('/api/detect', {
           method: 'POST',
           body: formData
