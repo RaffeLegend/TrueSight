@@ -47,3 +47,4 @@ class TrueModel:
 
         print("thinking content:", thinking_content)
         print("content:", content)
+        return content
