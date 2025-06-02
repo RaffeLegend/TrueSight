@@ -56,10 +56,8 @@
     const preview = document.getElementById('preview');
     const resultDiv = document.getElementById('result');
 
-    // 点击拖拽区打开文件选择
     dropZone.addEventListener('click', () => imageInput.click());
 
-    // 拖拽上传支持
     dropZone.addEventListener('dragover', (e) => {
       e.preventDefault();
       dropZone.classList.add('bg-primary/20');
@@ -85,6 +83,8 @@
         reader.onload = e => {
           preview.src = e.target.result;
           preview.classList.remove('hidden');
+          // 清空上一次的检测结果
+          resultDiv.innerHTML = '';
         };
         reader.readAsDataURL(file);
       }
@@ -97,9 +97,7 @@
         return;
       }
 
-      const formData = new FormData();
-      formData.append('image', file);
-
+      // 显示加载中
       resultDiv.innerHTML = '<span class="text-gray-600 animate-pulse">⏳ Detection in progress...</span>';
 
       try {
@@ -111,16 +109,33 @@
         if (!response.ok) throw new Error(`HTTP Error：${response.status}`);
 
         const data = await response.json();
+
+        let resultHtml = '';
         if (data.result === 'ai') {
-          resultDiv.innerHTML = '<span class="text-danger">🤖 Detection Result: This is an AI-generated image.</span>';
+          resultHtml += '<span class="text-danger text-2xl font-bold">🤖 Detection Result: This is an AI-generated image.</span>';
+        } else if (data.result === 'real') {
+          resultHtml += '<span class="text-success text-2xl font-bold">📷 Detection Result: This image is authentic.</span>';
         } else {
-          resultDiv.innerHTML = '<span class="text-success">📷 Detection Result: This image is authentic.</span>';
+          resultHtml += '<span class="text-gray-600 text-2xl font-bold">❓ Detection Result: Unknown.</span>';
         }
+
+        // 添加 reason 解释
+        if (data.reason) {
+          resultHtml += `<div class="mt-4 text-gray-700 text-base bg-gray-100 p-4 rounded-lg shadow-inner">
+                          <strong>Reason:</strong> ${data.reason}
+                         </div>`;
+        }
+
+        resultDiv.innerHTML = resultHtml;
+
+        // 📌 检测完自动平滑滚动到结果
+        resultDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
       } catch (error) {
         console.error(error);
         resultDiv.innerHTML = '<span class="text-red-600">❌ Detection failed. Please try again later.</span>';
       }
     }
-  </script>
+</script>
 </body>
 </html>
