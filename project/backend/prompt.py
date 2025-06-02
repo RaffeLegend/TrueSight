@@ -17,3 +17,28 @@ PROMPT = (
     "<reason>The image shows unnatural textures, inconsistent lighting, and distorted facial features, which are typical signs of AI generation.</reason>"
     "<answer>AI</answer>\n"
 )
+
+PROMPT = (
+    "Please determine whether this image is AI-generated or real.\n"
+    "Analyze the image step-by-step from the following perspectives:\n"
+    "1. Detail Analysis: Examine fine details like textures, edges, and facial features.\n"
+    "2. Texture Consistency: Check for coherence and natural variation across surfaces.\n"
+    "3. Lighting and Shadows: Assess the realism and consistency of lighting and shadows.\n"
+    "4. Composition and Semantics: Evaluate object arrangement and logical coherence.\n"
+    "5. Other Anomalies: Identify any additional irregularities typical of AI generation.\n"
+    "For each step, output your analysis in corresponding tags:\n"
+    "<detail_analysis> ... </detail_analysis>\n"
+    "<texture_analysis> ... </texture_analysis>\n"
+    "<lighting_analysis> ... </lighting_analysis>\n"
+    "<composition_analysis> ... </composition_analysis>\n"
+    "<anomaly_analysis> ... </anomaly_analysis>\n"
+    "Then, summarize your findings in <reason> tags, and conclude with <answer> tags (write only 'AI' or 'Real').\n"
+    "Example:\n"
+    "<detail_analysis>The image lacks fine details around the facial features, suggesting synthetic generation.</detail_analysis>\n"
+    "<texture_analysis>Textures appear overly smooth and repetitive, especially on clothing and background.</texture_analysis>\n"
+    "<lighting_analysis>Lighting is inconsistent with the scene's perspective, and shadows are missing.</lighting_analysis>\n"
+    "<composition_analysis>Object positioning is awkward, and semantic inconsistencies are present.</composition_analysis>\n"
+    "<anomaly_analysis>Background artifacts and distorted structures are noticeable, typical in AI-generated images.</anomaly_analysis>\n"
+    "<reason>The combination of poor texture quality, lighting inconsistencies, and semantic errors strongly suggests the image is AI-generated.</reason>\n"
+    "<answer>AI</answer>\n"
+)
