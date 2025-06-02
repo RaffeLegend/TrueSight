@@ -23,7 +23,7 @@ class TrueModel:
         message = format_data(image_path, PROMPT)
 
         text = self.tokenizer.apply_chat_template(
-            message['message'],
+            message,
             tokenize=False,
             add_generation_prompt=True,
             enable_thinking=True # Switches between thinking and non-thinking modes. Default is True.

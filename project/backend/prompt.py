@@ -18,7 +18,7 @@ PROMPT = (
     "<answer>AI</answer>\n"
 )
 
-PROMPT = (
+PROMPT_1 = (
     "Please determine whether this image is AI-generated or real.\n"
     "Analyze the image step-by-step from the following perspectives:\n"
     "1. Detail Analysis: Examine fine details like textures, edges, and facial features.\n"

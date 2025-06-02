@@ -128,29 +128,18 @@ def extract_answer_reason(response):
 def format_data(image_path, prompt):
     with Image.open(image_path) as image:
         image = image.convert("RGB")
-    return {
-            "messages": [
+    return [
                 {
                     "role": "system",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": prompt
-                        }
-                    ]
+                    "content": prompt
                 },
                 {
                     "role": "user",
                     "content": [
-                        {
-                            "type": "text",
-                            "text": prompt
-                        },
                         {
                             "type": "image",
                             "image": image
                         }
                     ]
                 },
-                ]
-            }
+            ]
