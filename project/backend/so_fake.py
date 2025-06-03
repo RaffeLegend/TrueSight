@@ -3,7 +3,7 @@ from prompt import DEFAULT_PROMPT
 from utils import extract_classification_and_bbox
 import torch
 import base64
-from sam2.sam2.sam2_image_predictor import SAM2ImagePredictor
+# from sam2.sam2.sam2_image_predictor import SAM2ImagePredictor
 from PIL import Image
 from qwen_vl_utils import process_vision_info
 import numpy as np
@@ -29,7 +29,7 @@ class TrueModel:
         ).eval()
 
         # Load the segmentation model (SAM2)
-        self.segmentation_model = SAM2ImagePredictor.from_pretrained(segmentation_model_path)
+        # self.segmentation_model = SAM2ImagePredictor.from_pretrained(segmentation_model_path)
         
         # Default processor
         self.processor = AutoProcessor.from_pretrained(model_path, padding_side="left")
@@ -84,11 +84,11 @@ class TrueModel:
         classification, bbox, think = extract_classification_and_bbox(output_text[0], self.x_factor, self.y_factor)
         self.classification = classification
         self.bbox = bbox
-        self.seg = self.seg()
+        # self.seg = self.seg()
         print("thinking content:", think)
         print("content:", classification)
         print("bbox", bbox)
-        return {'reason': think, 'answer': classification, 'bbox': bbox, 'segmentation': self.seg}
+        return {'reason': think, 'answer': classification, 'bbox': bbox, 'segmentation': None}
     
 def seg(self):
     if self.classification == "TAMPERED" and self.bbox is not None:
