@@ -3,13 +3,13 @@ from prompt import DEFAULT_PROMPT
 from utils import extract_classification_and_bbox
 import torch
 import base64
-# from sam2.sam2.sam2_image_predictor import SAM2ImagePredictor
+from sam2.sam2_image_predictor import SAM2ImagePredictor
 from PIL import Image
 from qwen_vl_utils import process_vision_info
 import numpy as np
 import cv2
 
-model_path = "/root/autodl-fs/so_fake"
+model_path = "/root/autodl-fs/so_fake_1"
 segmentation_model_path = ""
 
 class TrueModel:
@@ -24,12 +24,12 @@ class TrueModel:
         self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
             model_path,
             torch_dtype=torch.bfloat16,
-            attn_implementation="flash_attention_2",
+            # attn_implementation="flash_attention_2",
             device_map="auto",
         ).eval()
 
         # Load the segmentation model (SAM2)
-        # self.segmentation_model = SAM2ImagePredictor.from_pretrained(segmentation_model_path)
+        self.segmentation_model = SAM2ImagePredictor.from_pretrained(segmentation_model_path)
         
         # Default processor
         self.processor = AutoProcessor.from_pretrained(model_path, padding_side="left")
@@ -84,11 +84,11 @@ class TrueModel:
         classification, bbox, think = extract_classification_and_bbox(output_text[0], self.x_factor, self.y_factor)
         self.classification = classification
         self.bbox = bbox
-        # self.seg = self.seg()
+        self.seg = self.seg()
         print("thinking content:", think)
         print("content:", classification)
         print("bbox", bbox)
-        return {'reason': think, 'answer': classification, 'bbox': bbox, 'segmentation': None}
+        return {'reason': think, 'answer': classification, 'bbox': bbox, 'segmentation': self.seg}
     
 def seg(self):
     if self.classification == "TAMPERED" and self.bbox is not None:
