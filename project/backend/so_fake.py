@@ -91,38 +91,38 @@ class TrueModel:
         print("bbox", bbox)
         return {'reason': think, 'answer': classification, 'bbox': bbox, 'segmentation': self.seg}
     
-def seg(self):
-    if self.classification == "TAMPERED" and self.bbox is not None:
-        with torch.inference_mode(), torch.autocast("cuda", dtype=torch.bfloat16):
-            self.segmentation_model.set_image(self.image)
-            masks, scores, _ = self.segmentation_model.predict(
-                box=self.bbox,
-                multimask_output=True
-            )
-            sorted_ind = np.argsort(scores)[::-1]
-            masks = masks[sorted_ind]
+    def seg(self):
+        if self.classification == "TAMPERED" and self.bbox is not None:
+            with torch.inference_mode(), torch.autocast("cuda", dtype=torch.bfloat16):
+                self.segmentation_model.set_image(self.image)
+                masks, scores, _ = self.segmentation_model.predict(
+                    box=self.bbox,
+                    multimask_output=True
+                )
+                sorted_ind = np.argsort(scores)[::-1]
+                masks = masks[sorted_ind]
 
-        mask = masks[0].astype(bool)
+            mask = masks[0].astype(bool)
 
-        # Convert original image to numpy array
-        image_np = np.array(self.image)
+            # Convert original image to numpy array
+            image_np = np.array(self.image)
 
-        # Create a masked version of the image (red overlay)
-        masked_img = image_np.copy()
-        overlay = (
-            image_np * 0.5 +
-            mask[:, :, None].astype(np.uint8) * np.array([255, 0, 0]) * 0.5
-        ).astype(np.uint8)
-        masked_img[mask] = overlay[mask]
+            # Create a masked version of the image (red overlay)
+            masked_img = image_np.copy()
+            overlay = (
+                image_np * 0.5 +
+                mask[:, :, None].astype(np.uint8) * np.array([255, 0, 0]) * 0.5
+            ).astype(np.uint8)
+            masked_img[mask] = overlay[mask]
 
-        # Convert to BGR for OpenCV
-        masked_img = cv2.cvtColor(masked_img, cv2.COLOR_RGB2BGR)
+            # Convert to BGR for OpenCV
+            masked_img = cv2.cvtColor(masked_img, cv2.COLOR_RGB2BGR)
 
-        # Encode to PNG buffer
-        _, buffer = cv2.imencode('.png', masked_img)
-        img_base64 = base64.b64encode(buffer).decode('utf-8')
-        img_base64 = f"data:image/png;base64,{img_base64}"
+            # Encode to PNG buffer
+            _, buffer = cv2.imencode('.png', masked_img)
+            img_base64 = base64.b64encode(buffer).decode('utf-8')
+            img_base64 = f"data:image/png;base64,{img_base64}"
 
-        return img_base64
+            return img_base64
 
-    return None
+        return None
