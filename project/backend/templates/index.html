@@ -48,6 +48,11 @@
     </button>
 
     <div id="result" class="mt-6 text-center text-xl font-semibold min-h-[2rem]"></div>
+
+    <div id="segmentation" class="mt-6 text-center hidden">
+      <h2 class="text-2xl font-semibold mb-4">🖼️ Segmentation Result</h2>
+      <img id="segmentationImage" class="rounded-xl shadow-lg inline-block max-w-full h-auto" />
+    </div>
   </div>
 
   <script>
@@ -118,6 +123,8 @@
           resultHtml += '<span class="text-danger text-2xl font-bold">🤖 Detection Result: This is an AI-generated image.</span>';
         } else if (data.result === 'real') {
           resultHtml += '<span class="text-success text-2xl font-bold">📷 Detection Result: This image is authentic.</span>';
+        } else if (data.result === 'tampered') {
+          resultHtml += '<span class="text-warning text-2xl font-bold">🛠️ Detection Result: This image has been tampered with.</span>';
         } else {
           resultHtml += '<span class="text-gray-600 text-2xl font-bold">❓ Detection Result: Unknown.</span>';
         }
@@ -134,6 +141,12 @@
         // 📌 检测完自动平滑滚动到结果
         resultDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
+        if (data.segmentation) {
+            const segmentationDiv = document.getElementById('segmentation');
+            const segmentationImage = document.getElementById('segmentationImage');
+            segmentationImage.src = data.segmentation; // 假设是base64或URL
+            segmentationDiv.classList.remove('hidden');
+          }
       } catch (error) {
         console.error(error);
         resultDiv.innerHTML = '<span class="text-red-600">❌ Detection failed. Please try again later.</span>';

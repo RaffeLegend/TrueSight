@@ -143,3 +143,52 @@ def format_data(image_path, prompt):
                     ]
                 },
             ]
+
+def extract_classification_and_bbox(output_text, x_factor, y_factor):
+    # Print the complete output for debugging
+    print(f"Complete output text: {output_text}")
+    
+    # Extract thinking process
+    think_pattern = r'<think>([\s\S]+?)</think>'
+    think_match = re.search(think_pattern, output_text)
+    if think_match:
+        think_text = think_match.group(1).strip()
+    else:
+        think_text = "No thinking process found."
+    
+    # Extract answer
+    answer_pattern = r'<answer>([\s\S]+?)</answer>'
+    answer_match = re.search(answer_pattern, output_text)
+    
+    if not answer_match:
+        print("WARNING: No answer tag found in output text")
+        return "UNKNOWN", None, think_text
+    
+    answer = answer_match.group(1).strip()
+    print(f"Extracted answer: {answer}")
+    
+    # Check classification
+    if "FULL_SYNTHETIC" in answer.upper():
+        return "FULL_SYNTHETIC", None, think_text
+    elif "REAL" in answer.upper():
+        return "REAL", None, think_text
+    elif "TAMPERED" in answer.upper():
+        # Extract bounding box
+        bbox_pattern = re.compile(
+            r'(?:<\|box_start\|>)?\s*\((\d+),\s*(\d+)\)\s*,\s*\((\d+),\s*(\d+)\)\s*(?:<\|box_end\|>)?',
+            re.I
+        )
+        bbox_match = re.search(bbox_pattern, answer)
+        if bbox_match:
+            x1 = round(int(bbox_match.group(1)) * x_factor)
+            y1 = round(int(bbox_match.group(2)) * y_factor)
+            x2 = round(int(bbox_match.group(3)) * x_factor)
+            y2 = round(int(bbox_match.group(4)) * y_factor)
+            return "TAMPERED", [x1, y1, x2, y2], think_text
+        else:
+            print("WARNING: TAMPERED image but no bbox found")
+            return "TAMPERED", None, think_text
+    else:
+        print(f"WARNING: Unknown classification in answer: {answer}")
+        return "UNKNOWN", None, think_text
+
