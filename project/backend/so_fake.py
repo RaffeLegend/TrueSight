@@ -10,7 +10,7 @@ import numpy as np
 import cv2
 
 model_path = "/root/autodl-fs/so_fake_1"
-segmentation_model_path = ""
+segmentation_model_path = "facebook/sam2-hiera-large"
 
 class TrueModel:
     def __init__(self):
@@ -85,6 +85,7 @@ class TrueModel:
         self.classification = classification
         self.bbox = bbox
         self.seg = self.seg()
+        print(classification, bbox, think)
         print("thinking content:", think)
         print("content:", classification)
         print("bbox", bbox)
