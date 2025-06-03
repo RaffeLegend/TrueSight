@@ -15,7 +15,6 @@
             success: '#22c55e',
             danger: '#ef4444',
             warning: '#f59e0b',
-            bgDark: '#0f172a',
           },
           animation: {
             'fade-in': 'fadeIn 0.5s ease-out',
@@ -101,9 +100,20 @@
         <div id="result" class="text-center text-xl font-semibold min-h-[5rem] p-6 w-full rounded-2xl bg-white/20 shadow-inner"></div>
 
         <div id="segmentation" class="mt-10 text-center hidden w-full animate-fade-slow">
-          <h2 class="text-2xl font-bold mb-6">🖼️ Segmentation Result</h2>
-          <div class="p-2 border-4 border-primary rounded-2xl inline-block shadow-md">
-            <img id="segmentationImage" class="rounded-xl max-w-full h-auto opacity-0 transition-opacity duration-700" />
+          <h2 class="text-2xl font-bold mb-6">🖼️ Detection Results</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 class="text-xl font-semibold mb-2">📦 Bounding Box</h3>
+              <div class="p-2 border-4 border-primary rounded-2xl inline-block shadow-md">
+                <img id="bboxImage" class="rounded-xl max-w-full h-auto opacity-0 transition-opacity duration-700" />
+              </div>
+            </div>
+            <div>
+              <h3 class="text-xl font-semibold mb-2">🎯 Segmentation</h3>
+              <div class="p-2 border-4 border-primary rounded-2xl inline-block shadow-md">
+                <img id="segmentationImage" class="rounded-xl max-w-full h-auto opacity-0 transition-opacity duration-700" />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -120,6 +130,7 @@
     const resultDiv = document.getElementById('result');
     const segmentationDiv = document.getElementById('segmentation');
     const segmentationImage = document.getElementById('segmentationImage');
+    const bboxImage = document.getElementById('bboxImage');
     const historyDiv = document.getElementById('history');
 
     // 初始化粒子动画
@@ -158,6 +169,8 @@
           segmentationDiv.classList.add('hidden');
           segmentationImage.src = '';
           segmentationImage.style.opacity = 0;
+          bboxImage.src = '';
+          bboxImage.style.opacity = 0;
           preview.scrollIntoView({ behavior: 'smooth', block: 'center' });
         };
         reader.readAsDataURL(file);
@@ -175,6 +188,8 @@
       segmentationDiv.classList.add('hidden');
       segmentationImage.src = '';
       segmentationImage.style.opacity = 0;
+      bboxImage.src = '';
+      bboxImage.style.opacity = 0;
 
       try {
         const formData = new FormData();
@@ -215,11 +230,19 @@
         resultDiv.innerHTML = resultHtml;
         resultDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
+        if (data.segmentation || data.bbox) {
+          segmentationDiv.classList.remove('hidden');
+        }
         if (data.segmentation) {
           segmentationImage.src = data.segmentation;
-          segmentationDiv.classList.remove('hidden');
           segmentationImage.onload = () => {
             segmentationImage.style.opacity = 1;
+          };
+        }
+        if (data.bbox) {
+          bboxImage.src = data.bbox;
+          bboxImage.onload = () => {
+            bboxImage.style.opacity = 1;
           };
         }
 
