@@ -14,6 +14,7 @@
             primary: '#6366F1',
             success: '#16A34A',
             danger: '#DC2626',
+            warning: '#F59E0B',
           },
           animation: {
             'fade-in': 'fadeIn 0.5s ease-out'
@@ -23,36 +24,50 @@
               '0%': { opacity: 0, transform: 'scale(0.95)' },
               '100%': { opacity: 1, transform: 'scale(1)' }
             }
+          },
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui']
           }
         }
       }
     }
   </script>
 </head>
-<body class="bg-gradient-to-tr from-indigo-200 via-purple-100 to-pink-200 min-h-screen flex items-center justify-center p-6">
 
-  <div class="bg-white/90 backdrop-blur-xl shadow-2xl rounded-2xl p-8 w-full max-w-xl animate-fade-in">
-    <h1 class="text-4xl font-extrabold text-center text-gray-800 mb-6">
-      🧠 AI Generated Detection
+<body class="bg-gradient-to-tr from-indigo-200 via-purple-100 to-pink-200 min-h-screen flex items-center justify-center p-6 font-sans">
+
+  <div class="bg-white/90 backdrop-blur-xl shadow-2xl rounded-3xl p-10 w-full max-w-7xl animate-fade-in">
+    <h1 class="text-4xl md:text-5xl font-extrabold text-center text-gray-800 mb-10">
+      🧠 AI Image Detection Tool
     </h1>
 
-    <div id="dropZone" class="border-2 border-dashed border-primary rounded-xl p-6 text-center text-gray-500 hover:bg-primary/10 transition cursor-pointer mb-6">
-      <p class="text-lg">Click or drag an image here</p>
-      <input id="imageInput" type="file" accept="image/*" class="hidden" />
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+      
+      <!-- 左边：上传和预览 -->
+      <div class="flex flex-col items-center">
+        <div id="dropZone" class="w-full border-2 border-dashed border-primary rounded-2xl p-8 text-center text-gray-500 hover:bg-primary/10 transition cursor-pointer mb-6">
+          <p class="text-lg">📤 Click or Drag an image here</p>
+          <input id="imageInput" type="file" accept="image/*" class="hidden" />
+        </div>
+
+        <img id="preview" class="rounded-2xl mb-6 hidden w-full h-auto shadow-lg" />
+
+        <button onclick="detectImage()" class="w-full bg-primary hover:bg-indigo-700 active:scale-95 text-white font-bold py-3 px-6 rounded-2xl shadow-md transition">
+          🔍 Detect Image
+        </button>
+      </div>
+
+      <!-- 右边：检测结果 -->
+      <div class="md:col-span-2 flex flex-col items-center">
+        <div id="result" class="text-center text-xl font-semibold min-h-[3rem] p-6 w-full rounded-2xl bg-gradient-to-r from-purple-100 to-pink-100 shadow-inner"></div>
+
+        <div id="segmentation" class="mt-8 text-center hidden w-full">
+          <h2 class="text-2xl font-bold mb-4">🖼️ Segmentation Result</h2>
+          <img id="segmentationImage" class="rounded-2xl shadow-lg inline-block max-w-full h-auto" />
+        </div>
+      </div>
     </div>
 
-    <img id="preview" class="rounded-xl mb-4 hidden w-full h-auto shadow-lg" />
-
-    <button onclick="detectImage()" class="w-full bg-primary hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition">
-      🔍 Detect
-    </button>
-
-    <div id="result" class="mt-6 text-center text-xl font-semibold min-h-[2rem]"></div>
-
-    <div id="segmentation" class="mt-6 text-center hidden">
-      <h2 class="text-2xl font-semibold mb-4">🖼️ Segmentation Result</h2>
-      <img id="segmentationImage" class="rounded-xl shadow-lg inline-block max-w-full h-auto" />
-    </div>
   </div>
 
   <script>
@@ -88,8 +103,8 @@
         reader.onload = e => {
           preview.src = e.target.result;
           preview.classList.remove('hidden');
-          // 清空上一次的检测结果
           resultDiv.innerHTML = '';
+          preview.scrollIntoView({ behavior: 'smooth', block: 'center' });
         };
         reader.readAsDataURL(file);
       }
@@ -98,11 +113,10 @@
     async function detectImage() {
       const file = imageInput.files[0];
       if (!file) {
-        resultDiv.innerHTML = '<span class="text-red-600">❗Please upload an image first.</span>';
+        resultDiv.innerHTML = '<span class="text-danger">❗ Please upload an image first.</span>';
         return;
       }
 
-      // 显示加载中
       resultDiv.innerHTML = '<span class="text-gray-600 animate-pulse">⏳ Detection in progress...</span>';
 
       try {
@@ -114,44 +128,41 @@
           body: formData
         });
 
-        if (!response.ok) throw new Error(`HTTP Error：${response.status}`);
+        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
 
         const data = await response.json();
 
         let resultHtml = '';
         if (data.result === 'ai') {
-          resultHtml += '<span class="text-danger text-2xl font-bold">🤖 Detection Result: This is an AI-generated image.</span>';
+          resultHtml += '<span class="text-danger text-2xl font-bold">🤖 This is an AI-generated image.</span>';
         } else if (data.result === 'real') {
-          resultHtml += '<span class="text-success text-2xl font-bold">📷 Detection Result: This image is authentic.</span>';
+          resultHtml += '<span class="text-success text-2xl font-bold">📷 This image is authentic.</span>';
         } else if (data.result === 'tampered') {
-          resultHtml += '<span class="text-warning text-2xl font-bold">🛠️ Detection Result: This image has been tampered with.</span>';
+          resultHtml += '<span class="text-warning text-2xl font-bold">🛠️ This image has been tampered with.</span>';
         } else {
           resultHtml += '<span class="text-gray-600 text-2xl font-bold">❓ Detection Result: Unknown.</span>';
         }
 
-        // 添加 reason 解释
         if (data.reason) {
-          resultHtml += `<div class="mt-4 text-gray-700 text-base bg-gray-100 p-4 rounded-lg shadow-inner">
+          resultHtml += `<div class="mt-6 text-gray-700 text-base bg-gray-100 p-6 rounded-2xl shadow-inner">
                           <strong>Reason:</strong> ${data.reason}
                          </div>`;
         }
 
         resultDiv.innerHTML = resultHtml;
-
-        // 📌 检测完自动平滑滚动到结果
         resultDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
         if (data.segmentation) {
             const segmentationDiv = document.getElementById('segmentation');
             const segmentationImage = document.getElementById('segmentationImage');
-            segmentationImage.src = data.segmentation; // 假设是base64或URL
+            segmentationImage.src = data.segmentation;
             segmentationDiv.classList.remove('hidden');
           }
       } catch (error) {
         console.error(error);
-        resultDiv.innerHTML = '<span class="text-red-600">❌ Detection failed. Please try again later.</span>';
+        resultDiv.innerHTML = '<span class="text-danger">❌ Detection failed. Please try again later.</span>';
       }
     }
-</script>
+  </script>
 </body>
 </html>
