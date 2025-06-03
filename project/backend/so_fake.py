@@ -106,7 +106,7 @@ class TrueModel:
             mask = masks[0].astype(bool)
 
             # Convert original image to numpy array
-            image_np = np.array(self.image)
+            image_np = np.array(self.origin_image)
 
             # Create masked (Segmentation) version
             masked_img = image_np.copy()
