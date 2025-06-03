@@ -38,6 +38,7 @@ class TrueModel:
         # Load and process the image
         image = Image.open(image_path)
         image = image.convert("RGB")
+        self.origin_image = image
         original_width, original_height = image.size
         resize_size = 224
         self.x_factor, self.y_factor = original_width/resize_size, original_height/resize_size
@@ -94,7 +95,7 @@ class TrueModel:
     def segment(self):
         if self.classification == "TAMPERED" and self.bbox is not None:
             with torch.inference_mode(), torch.autocast("cuda", dtype=torch.bfloat16):
-                self.segmentation_model.set_image(self.image)
+                self.segmentation_model.set_image(self.origin_image)
                 masks, scores, _ = self.segmentation_model.predict(
                     box=self.bbox,
                     multimask_output=True
