@@ -17,12 +17,17 @@
             warning: '#F59E0B',
           },
           animation: {
-            'fade-in': 'fadeIn 0.5s ease-out'
+            'fade-in': 'fadeIn 0.5s ease-out',
+            'fade-slow': 'fadeSlow 1s ease-out'
           },
           keyframes: {
             fadeIn: {
               '0%': { opacity: 0, transform: 'scale(0.95)' },
               '100%': { opacity: 1, transform: 'scale(1)' }
+            },
+            fadeSlow: {
+              '0%': { opacity: 0 },
+              '100%': { opacity: 1 }
             }
           },
           fontFamily: {
@@ -32,6 +37,21 @@
       }
     }
   </script>
+  <style>
+    .spinner {
+      border: 4px solid #f3f3f3; 
+      border-top: 4px solid #6366F1; /* Primary color */
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      animation: spin 0.8s linear infinite;
+      margin: 2rem auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 
 <body class="bg-gradient-to-tr from-indigo-200 via-purple-100 to-pink-200 min-h-screen flex items-center justify-center p-6 font-sans">
@@ -50,7 +70,7 @@
           <input id="imageInput" type="file" accept="image/*" class="hidden" />
         </div>
 
-        <img id="preview" class="rounded-2xl mb-6 hidden w-full h-auto shadow-lg" />
+        <img id="preview" class="rounded-2xl mb-6 hidden w-full h-auto shadow-lg transition-opacity duration-500" />
 
         <button onclick="detectImage()" class="w-full bg-primary hover:bg-indigo-700 active:scale-95 text-white font-bold py-3 px-6 rounded-2xl shadow-md transition">
           🔍 Detect Image
@@ -61,13 +81,12 @@
       <div class="md:col-span-2 flex flex-col items-center">
         <div id="result" class="text-center text-xl font-semibold min-h-[3rem] p-6 w-full rounded-2xl bg-gradient-to-r from-purple-100 to-pink-100 shadow-inner"></div>
 
-        <div id="segmentation" class="mt-8 text-center hidden w-full">
+        <div id="segmentation" class="mt-8 text-center hidden w-full animate-fade-slow">
           <h2 class="text-2xl font-bold mb-4">🖼️ Segmentation Result</h2>
-          <img id="segmentationImage" class="rounded-2xl shadow-lg inline-block max-w-full h-auto" />
+          <img id="segmentationImage" class="rounded-2xl shadow-lg inline-block max-w-full h-auto opacity-0 transition-opacity duration-700" />
         </div>
       </div>
     </div>
-
   </div>
 
   <script>
@@ -75,6 +94,8 @@
     const dropZone = document.getElementById('dropZone');
     const preview = document.getElementById('preview');
     const resultDiv = document.getElementById('result');
+    const segmentationDiv = document.getElementById('segmentation');
+    const segmentationImage = document.getElementById('segmentationImage');
 
     dropZone.addEventListener('click', () => imageInput.click());
 
@@ -103,7 +124,11 @@
         reader.onload = e => {
           preview.src = e.target.result;
           preview.classList.remove('hidden');
+          preview.style.opacity = 1; // 确保新图淡入
           resultDiv.innerHTML = '';
+          segmentationDiv.classList.add('hidden');
+          segmentationImage.src = '';
+          segmentationImage.style.opacity = 0;
           preview.scrollIntoView({ behavior: 'smooth', block: 'center' });
         };
         reader.readAsDataURL(file);
@@ -117,12 +142,18 @@
         return;
       }
 
-      resultDiv.innerHTML = '<span class="text-gray-600 animate-pulse">⏳ Detection in progress...</span>';
+      // Spinner Loading
+      resultDiv.innerHTML = '<div class="spinner"></div>';
+
+      // 清空 segmentation
+      segmentationDiv.classList.add('hidden');
+      segmentationImage.src = '';
+      segmentationImage.style.opacity = 0;
 
       try {
         const formData = new FormData();
         formData.append('image', file);
-	
+
         const response = await fetch('/api/detect', {
           method: 'POST',
           body: formData
@@ -132,7 +163,7 @@
 
         const data = await response.json();
 
-        let resultHtml = '';
+        let resultHtml = '<div class="animate-fade-slow">';
         if (data.result === 'ai') {
           resultHtml += '<span class="text-danger text-2xl font-bold">🤖 This is an AI-generated image.</span>';
         } else if (data.result === 'real') {
@@ -148,16 +179,19 @@
                           <strong>Reason:</strong> ${data.reason}
                          </div>`;
         }
+        resultHtml += '</div>';
 
         resultDiv.innerHTML = resultHtml;
         resultDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
         if (data.segmentation) {
-            const segmentationDiv = document.getElementById('segmentation');
-            const segmentationImage = document.getElementById('segmentationImage');
-            segmentationImage.src = data.segmentation;
-            segmentationDiv.classList.remove('hidden');
-          }
+          segmentationImage.src = data.segmentation;
+          segmentationDiv.classList.remove('hidden');
+          segmentationImage.onload = () => {
+            segmentationImage.style.opacity = 1; // Segmentation图 fade-in
+          };
+        }
+
       } catch (error) {
         console.error(error);
         resultDiv.innerHTML = '<span class="text-danger">❌ Detection failed. Please try again later.</span>';
