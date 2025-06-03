@@ -84,45 +84,63 @@ class TrueModel:
         classification, bbox, think = extract_classification_and_bbox(output_text[0], self.x_factor, self.y_factor)
         self.classification = classification
         self.bbox = bbox
-        self.seg = self.segment()
+        self.seg, self.box = self.segment()
         print(classification, bbox, think)
         print("thinking content:", think)
         print("content:", classification)
         print("bbox", bbox)
-        return {'reason': think, 'answer': classification, 'bbox': bbox, 'segmentation': self.seg}
+        return {'reason': think, 'answer': classification, 'bbox': bbox, 'segmentation': self.seg, 'bbox':self.box}
     
-    def segment(self):
-        if self.classification == "TAMPERED" and self.bbox is not None:
-            with torch.inference_mode(), torch.autocast("cuda", dtype=torch.bfloat16):
-                self.segmentation_model.set_image(self.image)
-                masks, scores, _ = self.segmentation_model.predict(
-                    box=self.bbox,
-                    multimask_output=True
-                )
-                sorted_ind = np.argsort(scores)[::-1]
-                masks = masks[sorted_ind]
+def segment(self):
+    if self.classification == "TAMPERED" and self.bbox is not None:
+        with torch.inference_mode(), torch.autocast("cuda", dtype=torch.bfloat16):
+            self.segmentation_model.set_image(self.image)
+            masks, scores, _ = self.segmentation_model.predict(
+                box=self.bbox,
+                multimask_output=True
+            )
+            sorted_ind = np.argsort(scores)[::-1]
+            masks = masks[sorted_ind]
 
-            mask = masks[0].astype(bool)
+        mask = masks[0].astype(bool)
 
-            # Convert original image to numpy array
-            image_np = np.array(self.image)
+        # Convert original image to numpy array
+        image_np = np.array(self.image)
 
-            # Create a masked version of the image (red overlay)
-            masked_img = image_np.copy()
-            overlay = (
-                image_np * 0.5 +
-                mask[:, :, None].astype(np.uint8) * np.array([255, 0, 0]) * 0.5
-            ).astype(np.uint8)
-            masked_img[mask] = overlay[mask]
+        # Create masked (Segmentation) version
+        masked_img = image_np.copy()
+        overlay = (
+            image_np * 0.5 +
+            mask[:, :, None].astype(np.uint8) * np.array([255, 0, 0]) * 0.5
+        ).astype(np.uint8)
+        masked_img[mask] = overlay[mask]
+        masked_img = cv2.cvtColor(masked_img, cv2.COLOR_RGB2BGR)
 
-            # Convert to BGR for OpenCV
-            masked_img = cv2.cvtColor(masked_img, cv2.COLOR_RGB2BGR)
+        # Encode segmentation image
+        _, buffer_seg = cv2.imencode('.png', masked_img)
+        seg_base64 = base64.b64encode(buffer_seg).decode('utf-8')
+        seg_base64 = f"data:image/png;base64,{seg_base64}"
 
-            # Encode to PNG buffer
-            _, buffer = cv2.imencode('.png', masked_img)
-            img_base64 = base64.b64encode(buffer).decode('utf-8')
-            img_base64 = f"data:image/png;base64,{img_base64}"
+        # Create BBox version
+        bbox_img = image_np.copy()
+        bbox_img = cv2.cvtColor(bbox_img, cv2.COLOR_RGB2BGR)
+        x1, y1, x2, y2 = map(int, self.bbox)  # Make sure bbox are integers
 
-            return img_base64
+        # Draw rectangle
+        cv2.rectangle(bbox_img, (x1, y1), (x2, y2), (0, 255, 0), thickness=4)  # Green bbox
+        # Optionally, add label
+        cv2.putText(
+            bbox_img, "Tampered",
+            (x1, y1 - 10),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1, (0, 255, 0), 2, cv2.LINE_AA
+        )
 
-        return None
+        # Encode bbox image
+        _, buffer_bbox = cv2.imencode('.png', bbox_img)
+        bbox_base64 = base64.b64encode(buffer_bbox).decode('utf-8')
+        bbox_base64 = f"data:image/png;base64,{bbox_base64}"
+
+        return seg_base64, bbox_base64
+
+    return None, None

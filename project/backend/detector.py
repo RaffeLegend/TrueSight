@@ -26,17 +26,16 @@ def is_ai_generated(image_path):
         true_model.load_sample(image_path)
         # 生成回答
         response = true_model.generate()
-        print(response)
 
         # answer, reason = extract_answer_reason(response)
         if 'REAL' in response['answer']:
-            return {'result': 'real', 'reason': response['reason'], 'segmentation': response['segmentation']}
+            return {'result': 'real', 'reason': response['reason'], 'segmentation': response['segmentation'], 'bbox': response['bbox']}
         elif 'TAMPERED' in response['answer']:
-            return {'result': 'tampered', 'reason': response['reason'], 'segmentation': response['segmentation']}
+            return {'result': 'tampered', 'reason': response['reason'], 'segmentation': response['segmentation'], 'bbox': response['bbox']}
         elif 'FULL_SYNTHETIC' in response['answer']:
-            return {'result': 'ai', 'reason': response['reason'], 'segmentation': response['segmentation']}
+            return {'result': 'ai', 'reason': response['reason'], 'segmentation': response['segmentation'], 'bbox': response['bbox']}
         else:
-            return {'result': 'unknown', 'reason': response['reason'], 'segmentation': response['segmentation']}
+            return {'result': 'unknown', 'reason': response['reason'], 'segmentation': response['segmentation'], 'bbox': response['bbox']}
     
     except Exception as e:
         import traceback
