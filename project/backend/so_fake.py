@@ -84,14 +84,14 @@ class TrueModel:
         classification, bbox, think = extract_classification_and_bbox(output_text[0], self.x_factor, self.y_factor)
         self.classification = classification
         self.bbox = bbox
-        self.seg = self.seg()
+        self.seg = self.segment()
         print(classification, bbox, think)
         print("thinking content:", think)
         print("content:", classification)
         print("bbox", bbox)
         return {'reason': think, 'answer': classification, 'bbox': bbox, 'segmentation': self.seg}
     
-    def seg(self):
+    def segment(self):
         if self.classification == "TAMPERED" and self.bbox is not None:
             with torch.inference_mode(), torch.autocast("cuda", dtype=torch.bfloat16):
                 self.segmentation_model.set_image(self.image)
