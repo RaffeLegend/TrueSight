@@ -3,7 +3,7 @@
 <head>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI Image Detection Tool</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -12,9 +12,10 @@
         extend: {
           colors: {
             primary: '#6366F1',
-            success: '#16A34A',
-            danger: '#DC2626',
-            warning: '#F59E0B',
+            success: '#22c55e',
+            danger: '#ef4444',
+            warning: '#f59e0b',
+            bgDark: '#0f172a',
           },
           animation: {
             'fade-in': 'fadeIn 0.5s ease-out',
@@ -31,7 +32,7 @@
             }
           },
           fontFamily: {
-            sans: ['Inter', 'ui-sans-serif', 'system-ui']
+            sans: ['Poppins', 'ui-sans-serif', 'system-ui']
           }
         }
       }
@@ -39,11 +40,12 @@
   </script>
   <style>
     .spinner {
-      border: 4px solid #f3f3f3; 
-      border-top: 4px solid #6366F1; /* Primary color */
+      border: 6px solid rgba(255, 255, 255, 0.2);
+      border-top: 6px solid #6366F1;
+      border-right: 6px solid #22d3ee;
       border-radius: 50%;
-      width: 48px;
-      height: 48px;
+      width: 60px;
+      height: 60px;
       animation: spin 0.8s linear infinite;
       margin: 2rem auto;
     }
@@ -54,36 +56,39 @@
   </style>
 </head>
 
-<body class="bg-gradient-to-tr from-indigo-200 via-purple-100 to-pink-200 min-h-screen flex items-center justify-center p-6 font-sans">
+<body class="bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 min-h-screen flex items-center justify-center p-6 font-sans">
 
-  <div class="bg-white/90 backdrop-blur-xl shadow-2xl rounded-3xl p-10 w-full max-w-7xl animate-fade-in">
-    <h1 class="text-4xl md:text-5xl font-extrabold text-center text-gray-800 mb-10">
+  <div class="backdrop-blur-md bg-white/10 shadow-2xl rounded-3xl p-10 w-full max-w-7xl animate-fade-in border border-white/20">
+    <h1 class="text-4xl md:text-5xl font-extrabold text-center text-white mb-12">
       🧠 AI Image Detection Tool
     </h1>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
       
-      <!-- 左边：上传和预览 -->
-      <div class="flex flex-col items-center">
-        <div id="dropZone" class="w-full border-2 border-dashed border-primary rounded-2xl p-8 text-center text-gray-500 hover:bg-primary/10 transition cursor-pointer mb-6">
-          <p class="text-lg">📤 Click or Drag an image here</p>
+      <!-- 上传区域 -->
+      <div class="flex flex-col items-center bg-white/10 backdrop-blur-md p-8 rounded-3xl shadow-lg border border-white/20">
+        <div id="dropZone" class="w-full border-2 border-dashed border-primary rounded-2xl p-10 text-center text-white hover:bg-primary/10 transition cursor-pointer mb-6">
+          <div class="text-5xl mb-4">🖼️</div>
+          <p class="text-lg">Click or Drag an image here</p>
           <input id="imageInput" type="file" accept="image/*" class="hidden" />
         </div>
 
-        <img id="preview" class="rounded-2xl mb-6 hidden w-full h-auto shadow-lg transition-opacity duration-500" />
+        <img id="preview" class="rounded-2xl mb-6 hidden w-full h-auto shadow-lg transition-opacity duration-700" />
 
-        <button onclick="detectImage()" class="w-full bg-primary hover:bg-indigo-700 active:scale-95 text-white font-bold py-3 px-6 rounded-2xl shadow-md transition">
+        <button onclick="detectImage()" class="w-full bg-primary hover:bg-indigo-600 active:scale-95 text-white font-bold py-3 px-6 rounded-2xl shadow-lg transition transform hover:-translate-y-1">
           🔍 Detect Image
         </button>
       </div>
 
-      <!-- 右边：检测结果 -->
-      <div class="md:col-span-2 flex flex-col items-center">
-        <div id="result" class="text-center text-xl font-semibold min-h-[3rem] p-6 w-full rounded-2xl bg-gradient-to-r from-purple-100 to-pink-100 shadow-inner"></div>
+      <!-- 结果区域 -->
+      <div class="md:col-span-2 flex flex-col items-center bg-white/10 backdrop-blur-md p-8 rounded-3xl shadow-lg border border-white/20">
+        <div id="result" class="text-center text-xl font-semibold min-h-[5rem] p-6 w-full rounded-2xl bg-white/20 text-white shadow-inner"></div>
 
-        <div id="segmentation" class="mt-8 text-center hidden w-full animate-fade-slow">
-          <h2 class="text-2xl font-bold mb-4">🖼️ Segmentation Result</h2>
-          <img id="segmentationImage" class="rounded-2xl shadow-lg inline-block max-w-full h-auto opacity-0 transition-opacity duration-700" />
+        <div id="segmentation" class="mt-10 text-center hidden w-full animate-fade-slow">
+          <h2 class="text-2xl font-bold text-white mb-6">🖼️ Segmentation Result</h2>
+          <div class="p-2 border-4 border-primary rounded-2xl inline-block shadow-md">
+            <img id="segmentationImage" class="rounded-xl max-w-full h-auto opacity-0 transition-opacity duration-700" />
+          </div>
         </div>
       </div>
     </div>
@@ -124,7 +129,7 @@
         reader.onload = e => {
           preview.src = e.target.result;
           preview.classList.remove('hidden');
-          preview.style.opacity = 1; // 确保新图淡入
+          preview.style.opacity = 1;
           resultDiv.innerHTML = '';
           segmentationDiv.classList.add('hidden');
           segmentationImage.src = '';
@@ -142,10 +147,9 @@
         return;
       }
 
-      // Spinner Loading
+      // Spinner
       resultDiv.innerHTML = '<div class="spinner"></div>';
 
-      // 清空 segmentation
       segmentationDiv.classList.add('hidden');
       segmentationImage.src = '';
       segmentationImage.style.opacity = 0;
@@ -165,17 +169,17 @@
 
         let resultHtml = '<div class="animate-fade-slow">';
         if (data.result === 'ai') {
-          resultHtml += '<span class="text-danger text-2xl font-bold">🤖 This is an AI-generated image.</span>';
+          resultHtml += '<div class="bg-danger/80 rounded-xl p-6 text-2xl font-bold shadow-lg">🤖 This is an AI-generated image.</div>';
         } else if (data.result === 'real') {
-          resultHtml += '<span class="text-success text-2xl font-bold">📷 This image is authentic.</span>';
+          resultHtml += '<div class="bg-success/80 rounded-xl p-6 text-2xl font-bold shadow-lg">📷 This image is authentic.</div>';
         } else if (data.result === 'tampered') {
-          resultHtml += '<span class="text-warning text-2xl font-bold">🛠️ This image has been tampered with.</span>';
+          resultHtml += '<div class="bg-warning/80 rounded-xl p-6 text-2xl font-bold shadow-lg">🛠️ This image has been tampered with.</div>';
         } else {
-          resultHtml += '<span class="text-gray-600 text-2xl font-bold">❓ Detection Result: Unknown.</span>';
+          resultHtml += '<div class="bg-gray-500/80 rounded-xl p-6 text-2xl font-bold shadow-lg">❓ Detection Result: Unknown.</div>';
         }
 
         if (data.reason) {
-          resultHtml += `<div class="mt-6 text-gray-700 text-base bg-gray-100 p-6 rounded-2xl shadow-inner">
+          resultHtml += `<div class="mt-6 text-white text-base bg-white/20 p-6 rounded-xl shadow-inner">
                           <strong>Reason:</strong> ${data.reason}
                          </div>`;
         }
@@ -188,13 +192,13 @@
           segmentationImage.src = data.segmentation;
           segmentationDiv.classList.remove('hidden');
           segmentationImage.onload = () => {
-            segmentationImage.style.opacity = 1; // Segmentation图 fade-in
+            segmentationImage.style.opacity = 1;
           };
         }
 
       } catch (error) {
         console.error(error);
-        resultDiv.innerHTML = '<span class="text-danger">❌ Detection failed. Please try again later.</span>';
+        resultDiv.innerHTML = '<div class="bg-danger/80 rounded-xl p-6 text-xl font-bold">❌ Detection failed. Please try again later.</div>';
       }
     }
   </script>
