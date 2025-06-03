@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI Image Detection Tool</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles@3.3.0/tsparticles.bundle.min.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -39,6 +39,19 @@
     }
   </script>
   <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+    #tsparticles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
     .spinner {
       border: 6px solid rgba(255, 255, 255, 0.2);
       border-top: 6px solid #6366F1;
@@ -56,10 +69,13 @@
   </style>
 </head>
 
-<body class="bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 min-h-screen flex items-center justify-center p-6 font-sans">
+<body class="bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 min-h-screen flex flex-col items-center justify-center p-6 font-sans text-white">
+
+  <!-- 背景粒子 -->
+  <div id="tsparticles"></div>
 
   <div class="backdrop-blur-md bg-white/10 shadow-2xl rounded-3xl p-10 w-full max-w-7xl animate-fade-in border border-white/20">
-    <h1 class="text-4xl md:text-5xl font-extrabold text-center text-white mb-12">
+    <h1 class="text-4xl md:text-5xl font-extrabold text-center mb-12">
       🧠 AI Image Detection Tool
     </h1>
 
@@ -67,7 +83,7 @@
       
       <!-- 上传区域 -->
       <div class="flex flex-col items-center bg-white/10 backdrop-blur-md p-8 rounded-3xl shadow-lg border border-white/20">
-        <div id="dropZone" class="w-full border-2 border-dashed border-primary rounded-2xl p-10 text-center text-white hover:bg-primary/10 transition cursor-pointer mb-6">
+        <div id="dropZone" class="w-full border-2 border-dashed border-primary rounded-2xl p-10 text-center hover:bg-primary/10 transition cursor-pointer mb-6">
           <div class="text-5xl mb-4">🖼️</div>
           <p class="text-lg">Click or Drag an image here</p>
           <input id="imageInput" type="file" accept="image/*" class="hidden" />
@@ -82,10 +98,10 @@
 
       <!-- 结果区域 -->
       <div class="md:col-span-2 flex flex-col items-center bg-white/10 backdrop-blur-md p-8 rounded-3xl shadow-lg border border-white/20">
-        <div id="result" class="text-center text-xl font-semibold min-h-[5rem] p-6 w-full rounded-2xl bg-white/20 text-white shadow-inner"></div>
+        <div id="result" class="text-center text-xl font-semibold min-h-[5rem] p-6 w-full rounded-2xl bg-white/20 shadow-inner"></div>
 
         <div id="segmentation" class="mt-10 text-center hidden w-full animate-fade-slow">
-          <h2 class="text-2xl font-bold text-white mb-6">🖼️ Segmentation Result</h2>
+          <h2 class="text-2xl font-bold mb-6">🖼️ Segmentation Result</h2>
           <div class="p-2 border-4 border-primary rounded-2xl inline-block shadow-md">
             <img id="segmentationImage" class="rounded-xl max-w-full h-auto opacity-0 transition-opacity duration-700" />
           </div>
@@ -94,6 +110,9 @@
     </div>
   </div>
 
+  <!-- 历史记录 -->
+  <div id="history" class="mt-10 w-full max-w-7xl grid grid-cols-1 md:grid-cols-2 gap-8"></div>
+
   <script>
     const imageInput = document.getElementById('imageInput');
     const dropZone = document.getElementById('dropZone');
@@ -101,19 +120,24 @@
     const resultDiv = document.getElementById('result');
     const segmentationDiv = document.getElementById('segmentation');
     const segmentationImage = document.getElementById('segmentationImage');
+    const historyDiv = document.getElementById('history');
+
+    // 初始化粒子动画
+    tsParticles.load("tsparticles", {
+      background: { color: { value: "#0f172a" } },
+      particles: {
+        number: { value: 50 },
+        size: { value: 3 },
+        move: { speed: 1 },
+        color: { value: "#ffffff" },
+        links: { enable: true, color: "#ffffff" }
+      }
+    });
 
     dropZone.addEventListener('click', () => imageInput.click());
-
-    dropZone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      dropZone.classList.add('bg-primary/20');
-    });
-
-    dropZone.addEventListener('dragleave', () => {
-      dropZone.classList.remove('bg-primary/20');
-    });
-
-    dropZone.addEventListener('drop', (e) => {
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('bg-primary/20'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('bg-primary/20'));
+    dropZone.addEventListener('drop', e => {
       e.preventDefault();
       dropZone.classList.remove('bg-primary/20');
       imageInput.files = e.dataTransfer.files;
@@ -147,9 +171,7 @@
         return;
       }
 
-      // Spinner
       resultDiv.innerHTML = '<div class="spinner"></div>';
-
       segmentationDiv.classList.add('hidden');
       segmentationImage.src = '';
       segmentationImage.style.opacity = 0;
@@ -168,14 +190,19 @@
         const data = await response.json();
 
         let resultHtml = '<div class="animate-fade-slow">';
+        let resultLabel = '';
         if (data.result === 'ai') {
-          resultHtml += '<div class="bg-danger/80 rounded-xl p-6 text-2xl font-bold shadow-lg">🤖 This is an AI-generated image.</div>';
+          resultLabel = '🤖 AI-Generated';
+          resultHtml += `<div class="bg-danger/80 rounded-xl p-6 text-2xl font-bold shadow-lg">${resultLabel}</div>`;
         } else if (data.result === 'real') {
-          resultHtml += '<div class="bg-success/80 rounded-xl p-6 text-2xl font-bold shadow-lg">📷 This image is authentic.</div>';
+          resultLabel = '📷 Authentic';
+          resultHtml += `<div class="bg-success/80 rounded-xl p-6 text-2xl font-bold shadow-lg">${resultLabel}</div>`;
         } else if (data.result === 'tampered') {
-          resultHtml += '<div class="bg-warning/80 rounded-xl p-6 text-2xl font-bold shadow-lg">🛠️ This image has been tampered with.</div>';
+          resultLabel = '🛠️ Tampered';
+          resultHtml += `<div class="bg-warning/80 rounded-xl p-6 text-2xl font-bold shadow-lg">${resultLabel}</div>`;
         } else {
-          resultHtml += '<div class="bg-gray-500/80 rounded-xl p-6 text-2xl font-bold shadow-lg">❓ Detection Result: Unknown.</div>';
+          resultLabel = '❓ Unknown';
+          resultHtml += `<div class="bg-gray-500/80 rounded-xl p-6 text-2xl font-bold shadow-lg">${resultLabel}</div>`;
         }
 
         if (data.reason) {
@@ -196,11 +223,35 @@
           };
         }
 
+        saveHistory(preview.src, resultLabel, data.reason);
+
       } catch (error) {
         console.error(error);
         resultDiv.innerHTML = '<div class="bg-danger/80 rounded-xl p-6 text-xl font-bold">❌ Detection failed. Please try again later.</div>';
       }
     }
+
+    function saveHistory(imageSrc, label, reason) {
+      const history = JSON.parse(localStorage.getItem('history') || '[]');
+      history.unshift({ imageSrc, label, reason });
+      localStorage.setItem('history', JSON.stringify(history));
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const history = JSON.parse(localStorage.getItem('history') || '[]');
+      historyDiv.innerHTML = '';
+      history.forEach(item => {
+        historyDiv.innerHTML += `
+          <div class="bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-white/20">
+            <img src="${item.imageSrc}" class="rounded-xl mb-4 w-full h-auto shadow-md" />
+            <div class="text-xl font-bold mb-2">${item.label}</div>
+            <div class="text-white text-base">${item.reason || ''}</div>
+          </div>`;
+      });
+    }
+
+    renderHistory();
   </script>
 </body>
 </html>
