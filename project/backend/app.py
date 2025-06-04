@@ -38,18 +38,11 @@ def detect_image():
 
     try:
         print('image_path: ', filepath)
-        result = is_ai_generated(filepath)  # 应该返回 dict
-        # 确保 result 是字典，且值都是合法的 JSON
-        if not isinstance(result, dict):
-            return jsonify({'error': 'Internal model error.'}), 500
-        
-        # 检查关键字段
-        expected_keys = ['result', 'reason', 'segmentation', 'bbox']
-        for key in expected_keys:
-            if key not in result:
-                result[key] = None  # 确保 key 存在，即使值是 None
-        
-        return jsonify(result), 200  # 👈 指定返回 200
+        result = is_ai_generated(filepath)
+        print('Result:', result)
+
+        # **只加 200，不改数据**
+        return jsonify(result), 200
     except Exception as e:
         print("Detection Error:", e)
         traceback.print_exc()

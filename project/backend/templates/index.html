@@ -200,9 +200,12 @@
           body: formData
         });
 
-        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-
+        // if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
         const data = await response.json();
+        if (!response.ok) {
+          console.warn('Got non-200 but valid data:', data);
+          // 你可以加个前端小提示，非200警告，但继续处理data
+        }
 
         let resultHtml = '<div class="animate-fade-slow">';
         let resultLabel = '';
