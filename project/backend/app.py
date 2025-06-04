@@ -36,11 +36,20 @@ def detect_image():
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     file.save(filepath)
 
-    # 调用你的图像检测逻辑
     try:
         print('image_path: ', filepath)
-        result = is_ai_generated(filepath)  # 应返回 'ai' 或 'real'
-        return jsonify(result)
+        result = is_ai_generated(filepath)  # 应该返回 dict
+        # 确保 result 是字典，且值都是合法的 JSON
+        if not isinstance(result, dict):
+            return jsonify({'error': 'Internal model error.'}), 500
+        
+        # 检查关键字段
+        expected_keys = ['result', 'reason', 'segmentation', 'bbox']
+        for key in expected_keys:
+            if key not in result:
+                result[key] = None  # 确保 key 存在，即使值是 None
+        
+        return jsonify(result), 200  # 👈 指定返回 200
     except Exception as e:
         print("Detection Error:", e)
         traceback.print_exc()
