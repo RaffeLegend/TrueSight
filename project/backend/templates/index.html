@@ -65,6 +65,20 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+    /* Toast */
+    #toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: #22c55e;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      display: none;
+      font-size: 16px;
+      z-index: 9999;
+    }
   </style>
 </head>
 
@@ -120,8 +134,18 @@
     </div>
   </div>
 
+  <!-- 清除历史按钮 -->
+  <div class="mt-10 flex justify-center">
+    <button onclick="clearHistory()" class="bg-danger/80 hover:bg-danger text-white font-bold py-3 px-6 rounded-2xl shadow-lg transition transform hover:-translate-y-1">
+      🗑️ Clear Detection History
+    </button>
+  </div>
+
   <!-- 历史记录 -->
   <div id="history" class="mt-10 w-full max-w-7xl grid grid-cols-1 md:grid-cols-2 gap-8"></div>
+
+  <!-- Toast -->
+  <div id="toast">✅ Detection Completed</div>
 
   <script>
     const imageInput = document.getElementById('imageInput');
@@ -132,6 +156,7 @@
     const segmentationImage = document.getElementById('segmentationImage');
     const bboxImage = document.getElementById('bboxImage');
     const historyDiv = document.getElementById('history');
+    const toast = document.getElementById('toast');
 
     // 初始化粒子动画
     tsParticles.load("tsparticles", {
@@ -200,11 +225,12 @@
           body: formData
         });
 
-        // if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-        const data = await response.json();
-        if (!response.ok) {
-          console.warn('Got non-200 but valid data:', data);
-          // 你可以加个前端小提示，非200警告，但继续处理data
+        const data = await response.json(); 
+
+        if (data.error) {
+          console.warn('Server Error:', data.error);
+          resultDiv.innerHTML = `<div class="bg-danger/80 rounded-xl p-6 text-xl font-bold">❌ Detection failed: ${data.error}</div>`;
+          return;
         }
 
         let resultHtml = '<div class="animate-fade-slow">';
@@ -226,7 +252,7 @@
         if (data.reason) {
           resultHtml += `<div class="mt-6 text-white text-base bg-white/20 p-6 rounded-xl shadow-inner">
                           <strong>Reason:</strong> ${data.reason}
-                         </div>`;
+                        </div>`;
         }
         resultHtml += '</div>';
 
@@ -251,8 +277,11 @@
 
         saveHistory(preview.src, resultLabel, data.reason);
 
+        // ✅ 成功提示
+        showToast("✅ Detection Completed");
+
       } catch (error) {
-        console.error(error);
+        console.error('Detection Error:', error);
         resultDiv.innerHTML = '<div class="bg-danger/80 rounded-xl p-6 text-xl font-bold">❌ Detection failed. Please try again later.</div>';
       }
     }
@@ -275,6 +304,20 @@
             <div class="text-white text-base">${item.reason || ''}</div>
           </div>`;
       });
+    }
+
+    function clearHistory() {
+      localStorage.removeItem('history');
+      renderHistory();
+      showToast("🗑️ History Cleared");
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.style.display = 'block';
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 2000);
     }
 
     renderHistory();
