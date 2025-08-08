@@ -272,7 +272,7 @@
         bboxImage.onload = () => bboxImage.style.opacity = 1;
       }
 
-      saveHistory(preview.src, resultLabel, data.reason);
+      saveHistory(resultLabel, data.reason);
       showToast("✅ Detection Completed");
 
     } catch (error) {
@@ -281,25 +281,31 @@
     }
   }
 
-    function saveHistory(imageSrc, label, reason) {
-      const history = JSON.parse(localStorage.getItem('history') || '[]');
-      history.unshift({ imageSrc, label, reason });
-      localStorage.setItem('history', JSON.stringify(history));
-      renderHistory();
-    }
+    function saveHistory(label, reason) {
+    const history = JSON.parse(localStorage.getItem('history') || '[]');
 
-    function renderHistory() {
-      const history = JSON.parse(localStorage.getItem('history') || '[]');
-      historyDiv.innerHTML = '';
-      history.forEach(item => {
-        historyDiv.innerHTML += `
-          <div class="bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-white/20">
-            <img src="${item.imageSrc}" class="rounded-xl mb-4 w-full h-auto shadow-md" />
-            <div class="text-xl font-bold mb-2">${item.label}</div>
-            <div class="text-white text-base">${item.reason || ''}</div>
-          </div>`;
-      });
-    }
+    // 只保存 label、reason 和时间
+    history.unshift({ label, reason, time: new Date().toISOString() });
+
+    // 限制最多保留 20 条记录，防止超出 localStorage 限额
+    if (history.length > 20) history.pop();
+
+    localStorage.setItem('history', JSON.stringify(history));
+    renderHistory();
+  }
+
+  function renderHistory() {
+  const history = JSON.parse(localStorage.getItem('history') || '[]');
+  historyDiv.innerHTML = '';
+  history.forEach(item => {
+    historyDiv.innerHTML += `
+      <div class="bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-white/20">
+        <div class="text-xl font-bold mb-2">${item.label}</div>
+        <div class="text-white text-base">${item.reason || ''}</div>
+        <div class="text-sm text-gray-400 mt-2">${new Date(item.time).toLocaleString()}</div>
+      </div>`;
+  });
+}
 
     function clearHistory() {
       localStorage.removeItem('history');
