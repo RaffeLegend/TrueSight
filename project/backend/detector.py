@@ -29,13 +29,33 @@ def is_ai_generated(image_path):
 
         # answer, reason = extract_answer_reason(response)
         if 'REAL' in response['answer']:
-            return {'result': 'real', 'reason': response['reason'], 'segmentation': response['segmentation'], 'bbox': response['bbox']}
+            return {
+                'result': 'real', 
+                'reason': response['reason'] or '', 
+                'segmentation': response['segmentation'] or '', 
+                'bbox': response['bbox'] or ''
+                }
         elif 'TAMPERED' in response['answer']:
-            return {'result': 'tampered', 'reason': response['reason'], 'segmentation': response['segmentation'], 'bbox': response['bbox']}
+            return {
+                'result': 'tampered', 
+                'reason': response['reason'] or '', 
+                'segmentation': response['segmentation'] or '',
+                'bbox': response['bbox'] or ''
+                }
         elif 'FULL_SYNTHETIC' in response['answer']:
-            return {'result': 'ai', 'reason': response['reason'], 'segmentation': response['segmentation'], 'bbox': response['bbox']}
+            return {
+                'result': 'ai',
+                'reason': response['reason'] or '',
+                'segmentation': response['segmentation'] or '',
+                'bbox': response['bbox'] or ''
+                }
         else:
-            return {'result': 'unknown', 'reason': response['reason'], 'segmentation': response['segmentation'], 'bbox': response['bbox']}
+            return {
+                'result': 'unknown', 
+                'reason': response['reason'] or '', 
+                'segmentation': response['segmentation'] or '', 
+                'bbox': response['bbox'] or ''
+                }
     
     except Exception as e:
         import traceback
