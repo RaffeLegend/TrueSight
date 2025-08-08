@@ -2,6 +2,7 @@ import random
 # from model import TrueModel
 from so_fake import TrueModel
 from utils import extract_answer_reason
+from flask import jsonify
 
 true_model = None
 
@@ -29,33 +30,33 @@ def is_ai_generated(image_path):
 
         # answer, reason = extract_answer_reason(response)
         if 'REAL' in response['answer']:
-            return {
+            return jsonify({
                 'result': 'real', 
                 'reason': response['reason'] or '', 
                 'segmentation': response['segmentation'] or '', 
                 'bbox': response['bbox'] or ''
-                }
+                }), 200
         elif 'TAMPERED' in response['answer']:
-            return {
+            return jsonify({
                 'result': 'tampered', 
                 'reason': response['reason'] or '', 
                 'segmentation': response['segmentation'] or '',
                 'bbox': response['bbox'] or ''
-                }
+                }), 200
         elif 'FULL_SYNTHETIC' in response['answer']:
-            return {
+            return jsonify({
                 'result': 'ai',
                 'reason': response['reason'] or '',
                 'segmentation': response['segmentation'] or '',
                 'bbox': response['bbox'] or ''
-                }
+                }), 200
         else:
-            return {
+            return jsonify({
                 'result': 'unknown', 
                 'reason': response['reason'] or '', 
                 'segmentation': response['segmentation'] or '', 
                 'bbox': response['bbox'] or ''
-                }
+                }), 200
     
     except Exception as e:
         import traceback
