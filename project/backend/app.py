@@ -42,7 +42,7 @@ def detect_image():
         print('Result:', result, flush=True)
 
         # **只加 200，不改数据**
-        return jsonify(result), 200
+        return make_response(jsonify(result), 200)
     except Exception as e:
         print("Detection Error:", e, flush=True)
         traceback.print_exc()
