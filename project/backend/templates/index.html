@@ -202,108 +202,84 @@
       }
     }
 
-    async function detectImage() {
-      const file = imageInput.files[0];
-      if (!file) {
-        resultDiv.innerHTML = '<span class="text-danger">❗ Please upload an image first.</span>';
+
+  async function detectImage() {
+    const file = imageInput.files[0];
+    if (!file) {
+      resultDiv.innerHTML = '<span class="text-danger">❗ Please upload an image first.</span>';
+      return;
+    }
+
+    resultDiv.innerHTML = '<div class="spinner"></div>';
+    segmentationDiv.classList.add('hidden');
+    segmentationImage.src = '';
+    segmentationImage.style.opacity = 0;
+    bboxImage.src = '';
+    bboxImage.style.opacity = 0;
+
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await fetch('/api/detect', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await response.json();
+      console.log('Parsed JSON:', data);
+
+      if (!response.ok || data.error) {
+        resultDiv.innerHTML = `<div class="bg-danger/80 p-6 rounded-xl">❌ Detection failed: ${data.error || 'Unknown server error.'}</div>`;
         return;
       }
 
-      resultDiv.innerHTML = '<div class="spinner"></div>';
-      segmentationDiv.classList.add('hidden');
-      segmentationImage.src = '';
-      segmentationImage.style.opacity = 0;
-      bboxImage.src = '';
-      bboxImage.style.opacity = 0;
-
-      try {
-        const formData = new FormData();
-        formData.append('image', file);
-
-        const response = await fetch('/api/detect', {
-          method: 'POST',
-          body: formData
-        });
-
-        // const data = await response.json(); 
-        // 安全处理 HTTP 非 200 的响应
-        console.log('Raw response:', response);
-        const data = await response.json();
-        console.log('Parsed JSON:', data);  // 👈 添加这行确认结构
-
-        // let data;
-        try {
-          data = await response.json();
-        } catch (err) {
-          const text = await response.text(); // 可能是 HTML 错误页
-          console.error("Failed to parse JSON:", text);
-          resultDiv.innerHTML = `<div class="bg-danger/80 p-6 rounded-xl">❌ Server error. Please try again later.</div>`;
-          return;
-        }
-
-        if (!response.ok || data.error) {
-          resultDiv.innerHTML = `<div class="bg-danger/80 p-6 rounded-xl">❌ Detection failed: ${data.error || 'Unknown server error.'}</div>`;
-          return;
-        }
-
-        if (data.error) {
-          console.warn('Server Error:', data.error);
-          resultDiv.innerHTML = `<div class="bg-danger/80 rounded-xl p-6 text-xl font-bold">❌ Detection failed: ${data.error}</div>`;
-          return;
-        }
-
-        let resultHtml = '<div class="animate-fade-slow">';
-        let resultLabel = '';
-        if (data.result === 'ai') {
-          resultLabel = '🤖 AI-Generated';
-          resultHtml += `<div class="bg-danger/80 rounded-xl p-6 text-2xl font-bold shadow-lg">${resultLabel}</div>`;
-        } else if (data.result === 'real') {
-          resultLabel = '📷 Authentic';
-          resultHtml += `<div class="bg-success/80 rounded-xl p-6 text-2xl font-bold shadow-lg">${resultLabel}</div>`;
-        } else if (data.result === 'tampered') {
-          resultLabel = '🛠️ Tampered';
-          resultHtml += `<div class="bg-warning/80 rounded-xl p-6 text-2xl font-bold shadow-lg">${resultLabel}</div>`;
-        } else {
-          resultLabel = '❓ Unknown';
-          resultHtml += `<div class="bg-gray-500/80 rounded-xl p-6 text-2xl font-bold shadow-lg">${resultLabel}</div>`;
-        }
-
-        if (data.reason) {
-          resultHtml += `<div class="mt-6 text-white text-base bg-white/20 p-6 rounded-xl shadow-inner">
-                          <strong>Reason:</strong> ${data.reason}
-                        </div>`;
-        }
-        resultHtml += '</div>';
-
-        resultDiv.innerHTML = resultHtml;
-        resultDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-        if (data.segmentation || data.bbox) {
-          segmentationDiv.classList.remove('hidden');
-        }
-        if (data.segmentation) {
-          segmentationImage.src = data.segmentation;
-          segmentationImage.onload = () => {
-            segmentationImage.style.opacity = 1;
-          };
-        }
-        if (data.bbox) {
-          bboxImage.src = data.bbox;
-          bboxImage.onload = () => {
-            bboxImage.style.opacity = 1;
-          };
-        }
-
-        saveHistory(preview.src, resultLabel, data.reason);
-
-        // ✅ 成功提示
-        showToast("✅ Detection Completed");
-
-      } catch (error) {
-        console.error('Detection Error:', error);
-        resultDiv.innerHTML = '<div class="bg-danger/80 rounded-xl p-6 text-xl font-bold">❌ Detection failed. Please try again later.</div>';
+      let resultHtml = '<div class="animate-fade-slow">';
+      let resultLabel = '';
+      if (data.result === 'ai') {
+        resultLabel = '🤖 AI-Generated';
+        resultHtml += `<div class="bg-danger/80 rounded-xl p-6 text-2xl font-bold shadow-lg">${resultLabel}</div>`;
+      } else if (data.result === 'real') {
+        resultLabel = '📷 Authentic';
+        resultHtml += `<div class="bg-success/80 rounded-xl p-6 text-2xl font-bold shadow-lg">${resultLabel}</div>`;
+      } else if (data.result === 'tampered') {
+        resultLabel = '🛠️ Tampered';
+        resultHtml += `<div class="bg-warning/80 rounded-xl p-6 text-2xl font-bold shadow-lg">${resultLabel}</div>`;
+      } else {
+        resultLabel = '❓ Unknown';
+        resultHtml += `<div class="bg-gray-500/80 rounded-xl p-6 text-2xl font-bold shadow-lg">${resultLabel}</div>`;
       }
+
+      if (data.reason) {
+        resultHtml += `<div class="mt-6 text-white text-base bg-white/20 p-6 rounded-xl shadow-inner">
+                        <strong>Reason:</strong> ${data.reason}
+                      </div>`;
+      }
+      resultHtml += '</div>';
+
+      resultDiv.innerHTML = resultHtml;
+      resultDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      if (data.segmentation || data.bbox) {
+        segmentationDiv.classList.remove('hidden');
+      }
+      if (data.segmentation) {
+        segmentationImage.src = data.segmentation;
+        segmentationImage.onload = () => segmentationImage.style.opacity = 1;
+      }
+      if (data.bbox) {
+        bboxImage.src = data.bbox;
+        bboxImage.onload = () => bboxImage.style.opacity = 1;
+      }
+
+      saveHistory(preview.src, resultLabel, data.reason);
+      showToast("✅ Detection Completed");
+
+    } catch (error) {
+      console.error('Detection Error:', error);
+      resultDiv.innerHTML = '<div class="bg-danger/80 rounded-xl p-6 text-xl font-bold">❌ Detection failed. Please try again later.</div>';
     }
+  }
 
     function saveHistory(imageSrc, label, reason) {
       const history = JSON.parse(localStorage.getItem('history') || '[]');
