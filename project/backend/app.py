@@ -38,11 +38,11 @@ def detect_image():
 
     try:
         print('image_path: ', filepath, flush=True)
-        response, status = is_ai_generated(filepath)
-        print('Result:', response, flush=True)
+        result = is_ai_generated(filepath)
+        print('Result:', result, flush=True)
 
         # **只加 200，不改数据**
-        return make_response(jsonify(response), status)
+        return jsonify(response), 200
     except Exception as e:
         print("Detection Error:", e, flush=True)
         traceback.print_exc()

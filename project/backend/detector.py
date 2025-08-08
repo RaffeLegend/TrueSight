@@ -32,30 +32,30 @@ def is_ai_generated(image_path):
         if 'REAL' in response['answer']:
             return {
                 'result': 'real', 
-                'reason': response['reason'] or '', 
-                'segmentation': response['segmentation'] or '', 
-                'bbox': response['bbox'] or ''
+                'reason': response.get('reason') or '', 
+                'segmentation': response.get('segmentation') or '', 
+                'bbox': response.get('bbox') or ''
                 }, 200
         elif 'TAMPERED' in response['answer']:
             return {
                 'result': 'tampered', 
-                'reason': response['reason'] or '', 
-                'segmentation': response['segmentation'] or '',
-                'bbox': response['bbox'] or ''
+                'reason': response.get('reason') or '', 
+                'segmentation': response.get('segmentation') or '', 
+                'bbox': response.get('bbox') or ''
                 }, 200
         elif 'FULL_SYNTHETIC' in response['answer']:
             return {
                 'result': 'ai',
-                'reason': response['reason'] or '',
-                'segmentation': response['segmentation'] or '',
-                'bbox': response['bbox'] or ''
+                'reason': response.get('reason') or '', 
+                'segmentation': response.get('segmentation') or '', 
+                'bbox': response.get('bbox') or ''
                 }, 200
         else:
             return {
                 'result': 'unknown', 
-                'reason': response['reason'] or '', 
-                'segmentation': response['segmentation'] or '', 
-                'bbox': response['bbox'] or ''
+                'reason': response.get('reason') or '', 
+                'segmentation': response.get('segmentation') or '', 
+                'bbox': response.get('bbox') or ''
                 }, 200
     
     except Exception as e:
