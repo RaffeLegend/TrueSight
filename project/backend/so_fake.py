@@ -96,19 +96,26 @@ class TrueModel:
         if self.classification == "TAMPERED" and self.bbox is not None:
             with torch.inference_mode(), torch.autocast("cuda", dtype=torch.bfloat16):
                 self.segmentation_model.set_image(self.origin_image)
+
+                # Convert bbox to original scale
+                x1 = int(self.bbox[0] * self.x_factor)
+                y1 = int(self.bbox[1] * self.y_factor)
+                x2 = int(self.bbox[2] * self.x_factor)
+                y2 = int(self.bbox[3] * self.y_factor)
+                scaled_box = [x1, y1, x2, y2]
+
                 masks, scores, _ = self.segmentation_model.predict(
-                    box=self.bbox,
+                    box=scaled_box,
                     multimask_output=True
                 )
                 sorted_ind = np.argsort(scores)[::-1]
                 masks = masks[sorted_ind]
 
+            # Use first mask
             mask = masks[0].astype(bool)
-
-            # Convert original image to numpy array
             image_np = np.array(self.origin_image)
 
-            # Create masked (Segmentation) version
+            # Segmentation visualization
             masked_img = image_np.copy()
             overlay = (
                 image_np * 0.5 +
@@ -116,27 +123,20 @@ class TrueModel:
             ).astype(np.uint8)
             masked_img[mask] = overlay[mask]
             masked_img = cv2.cvtColor(masked_img, cv2.COLOR_RGB2BGR)
-
-            # Encode segmentation image
             _, buffer_seg = cv2.imencode('.png', masked_img)
             seg_base64 = base64.b64encode(buffer_seg).decode('utf-8')
             seg_base64 = f"data:image/png;base64,{seg_base64}"
 
-            # Create BBox version
+            # Bounding Box visualization
             bbox_img = image_np.copy()
             bbox_img = cv2.cvtColor(bbox_img, cv2.COLOR_RGB2BGR)
-            x1, y1, x2, y2 = map(int, self.bbox)  # Make sure bbox are integers
-
-            cv2.rectangle(bbox_img, (x1, y1), (x2, y2), (0, 255, 0), thickness=4)  # Green bbox
-            # Optionally, add label
+            cv2.rectangle(bbox_img, (x1, y1), (x2, y2), (0, 255, 0), thickness=4)
             cv2.putText(
                 bbox_img, "Tampered",
-                (x1, y1 - 10),
+                (x1, max(0, y1 - 10)),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 1, (0, 255, 0), 2, cv2.LINE_AA
             )
-
-            # Encode bbox image
             _, buffer_bbox = cv2.imencode('.png', bbox_img)
             bbox_base64 = base64.b64encode(buffer_bbox).decode('utf-8')
             bbox_base64 = f"data:image/png;base64,{bbox_base64}"

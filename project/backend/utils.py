@@ -173,17 +173,18 @@ def extract_classification_and_bbox(output_text, x_factor, y_factor):
     elif "REAL" in answer.upper():
         return "REAL", None, think_text
     elif "TAMPERED" in answer.upper():
-        # Extract bounding box
+        # Extract bbox without scaling
         bbox_pattern = re.compile(
             r'(?:<\|box_start\|>)?\s*\((\d+),\s*(\d+)\)\s*,\s*\((\d+),\s*(\d+)\)\s*(?:<\|box_end\|>)?',
             re.I
         )
         bbox_match = re.search(bbox_pattern, answer)
         if bbox_match:
-            x1 = round(int(bbox_match.group(1)) * x_factor)
-            y1 = round(int(bbox_match.group(2)) * y_factor)
-            x2 = round(int(bbox_match.group(3)) * x_factor)
-            y2 = round(int(bbox_match.group(4)) * y_factor)
+            # Just return the original (small image) bbox
+            x1 = int(bbox_match.group(1))
+            y1 = int(bbox_match.group(2))
+            x2 = int(bbox_match.group(3))
+            y2 = int(bbox_match.group(4))
             return "TAMPERED", [x1, y1, x2, y2], think_text
         else:
             print("WARNING: TAMPERED image but no bbox found")
