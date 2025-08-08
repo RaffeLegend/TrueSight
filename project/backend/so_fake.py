@@ -9,7 +9,7 @@ from qwen_vl_utils import process_vision_info
 import numpy as np
 import cv2
 
-model_path = "/root/autodl-fs/so_fake_1"
+model_path = "/mnt/nas_d/yiwei/data/model/so_fake/"
 segmentation_model_path = "facebook/sam2-hiera-large"
 
 class TrueModel:
