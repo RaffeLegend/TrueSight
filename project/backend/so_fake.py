@@ -128,6 +128,11 @@ class TrueModel:
             x1, y1, x2, y2 = map(int, self.bbox)  # Make sure bbox are integers
 
             # Draw rectangle
+            x1 = int(x1 * self.x_factor)
+            y1 = int(y1 * self.y_factor)
+            x2 = int(x2 * self.x_factor)
+            y2 = int(y2 * self.y_factor)
+            
             cv2.rectangle(bbox_img, (x1, y1), (x2, y2), (0, 255, 0), thickness=4)  # Green bbox
             # Optionally, add label
             cv2.putText(
