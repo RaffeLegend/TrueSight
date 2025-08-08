@@ -225,7 +225,22 @@
           body: formData
         });
 
-        const data = await response.json(); 
+        // const data = await response.json(); 
+        // 安全处理 HTTP 非 200 的响应
+        let data;
+        try {
+          data = await response.json();
+        } catch (err) {
+          const text = await response.text(); // 可能是 HTML 错误页
+          console.error("Failed to parse JSON:", text);
+          resultDiv.innerHTML = `<div class="bg-danger/80 p-6 rounded-xl">❌ Server error. Please try again later.</div>`;
+          return;
+        }
+
+        if (!response.ok || data.error) {
+          resultDiv.innerHTML = `<div class="bg-danger/80 p-6 rounded-xl">❌ Detection failed: ${data.error || 'Unknown server error.'}</div>`;
+          return;
+        }
 
         if (data.error) {
           console.warn('Server Error:', data.error);

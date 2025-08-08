@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, make_response
 from flask_cors import CORS
 from detector import is_ai_generated
 from werkzeug.utils import secure_filename
@@ -46,7 +46,10 @@ def detect_image():
     except Exception as e:
         print("Detection Error:", e, flush=True)
         traceback.print_exc()
-        return jsonify({'error': 'Server detection failed.'}), 500
+        # return jsonify({'error': 'Server detection failed.'}), 500
+        response = make_response(jsonify({'error': 'Server detection failed.'}), 500)
+        response.headers['Content-Type'] = 'application/json'
+        return response
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
