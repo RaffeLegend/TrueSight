@@ -30,33 +30,33 @@ def is_ai_generated(image_path):
 
         # answer, reason = extract_answer_reason(response)
         if 'REAL' in response['answer']:
-            return jsonify({
+            return {
                 'result': 'real', 
                 'reason': response['reason'] or '', 
                 'segmentation': response['segmentation'] or '', 
                 'bbox': response['bbox'] or ''
-                }), 200
+                }, 200
         elif 'TAMPERED' in response['answer']:
-            return jsonify({
+            return {
                 'result': 'tampered', 
                 'reason': response['reason'] or '', 
                 'segmentation': response['segmentation'] or '',
                 'bbox': response['bbox'] or ''
-                }), 200
+                }, 200
         elif 'FULL_SYNTHETIC' in response['answer']:
-            return jsonify({
+            return {
                 'result': 'ai',
                 'reason': response['reason'] or '',
                 'segmentation': response['segmentation'] or '',
                 'bbox': response['bbox'] or ''
-                }), 200
+                }, 200
         else:
-            return jsonify({
+            return {
                 'result': 'unknown', 
                 'reason': response['reason'] or '', 
                 'segmentation': response['segmentation'] or '', 
                 'bbox': response['bbox'] or ''
-                }), 200
+                }, 200
     
     except Exception as e:
         import traceback
